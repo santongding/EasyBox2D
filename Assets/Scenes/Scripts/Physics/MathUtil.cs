@@ -1,0 +1,77 @@
+﻿using UnityEngine;
+
+namespace EasyBox2D
+{
+    public struct Mat22
+    {
+        public Mat22(float angle)
+        {
+            float c = Mathf.Cos(angle), s = Mathf.Sin(angle);
+
+            col1.x = c;
+            col2.x = -s;
+            col1.y = s;
+            col2.y = c;
+        }
+
+        Mat22(Vector2 c1, Vector2 c2)
+        {
+            col1 = c1;
+            col2 = c2;
+        }
+
+        public Mat22 Transpose
+
+            => new Mat22(new Vector2(col1.x, col2.x), new Vector2(col1.y, col2.y));
+
+
+        public Mat22 Invert
+        {
+            get
+            {
+                {
+                    float a = col1.x, b = col2.x, c = col1.y, d = col2.y;
+                    Mat22 B;
+                    float det = a * d - b * c;
+                    Debug.Assert(det != 0.0f);
+                    det = 1.0f / det;
+                    B.col1.x = det * d;
+                    B.col2.x = -det * b;
+                    B.col1.y = -det * c;
+                    B.col2.y = det * a;
+                    return B;
+                }
+            }
+        }
+
+        public Mat22 Abs
+        {
+            get { return new Mat22(col1.Abs(), col2.Abs()); }
+        }
+
+        public Vector2 col1, col2;
+
+        public static Mat22 operator +(Mat22 b, Mat22 c)
+        {
+            return new Mat22(b.col1 + c.col1, b.col2 + c.col2);
+        }
+
+        public static Vector2 operator *(Mat22 A, Vector2 v)
+        {
+            return new Vector2(A.col1.x * v.x + A.col2.x * v.y, A.col1.y * v.x + A.col2.y * v.y);
+        }
+
+        public static Mat22 operator *(Mat22 A, Mat22 B)
+        {
+            return new Mat22(A * B.col1, A * B.col2);
+        }
+    };
+
+    public static class MathUtil
+    {
+        public static Vector2 Abs(this Vector2 v)
+        {
+            return new Vector2(Mathf.Abs(v.x), Mathf.Abs(v.y));
+        }
+    }
+}
