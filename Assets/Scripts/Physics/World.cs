@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace EasyBox2D
+namespace ReducedBox2D
 {
     public class World
     {
@@ -15,7 +15,7 @@ namespace EasyBox2D
         {
             _gravity = gravity;
         }
-
+        
         public void AddBody(Body body)
         {
             _bodies.Add(body);
@@ -26,15 +26,47 @@ namespace EasyBox2D
             _bodies.Remove(body);
         }
 
-        public void Simulate(float deltaTime)
+        public List<Arbiter>  Simulate(float deltaTime)
         {
             var arbiters = new List<Arbiter>();
             for (int i = 0; i < _bodies.Count - 1; i++)
             {
                 for (int j = i + 1; j < _bodies.Count; j++)
                 {
-                    arbiters.AddRange(CollideUtil.GetArbiter(_bodies[i], _bodies[j]));
+                    arbiters.AddRange(Collide.GetArbiter(_bodies[i], _bodies[j]));
                 }
+            }
+
+            foreach (var body in _bodies)
+            {
+                body.Velocity += deltaTime * (_gravity + body.InvMass * body.Force);
+                body.AngleVelocity += deltaTime * (body.InvMass * body.Torgue);
+            }
+            
+            foreach (var arbiter in arbiters)
+            {
+                arbiter.PreStep(deltaTime);
+            }
+            
+            foreach (var arbiter in arbiters)
+            {
+                arbiter.ApplyImpulse(deltaTime);
+            }
+            
+            UpdatePos(deltaTime);
+            
+            
+            return arbiters;
+        }
+
+        public void UpdatePos(float delatTime)
+        {
+            foreach (var body in _bodies)
+            {
+                body.Pos = body.Pos + body.Velocity * delatTime;
+                body.Rot = body.Rot + body.AngleVelocity * delatTime;
+                body.Force = Vector2.zero;
+                body.Torgue = 0f;
             }
         }
     }

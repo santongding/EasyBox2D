@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace EasyBox2D
+namespace ReducedBox2D
 {
     public struct Mat22
     {
@@ -72,6 +72,39 @@ namespace EasyBox2D
         public static Vector2 Abs(this Vector2 v)
         {
             return new Vector2(Mathf.Abs(v.x), Mathf.Abs(v.y));
+        }
+
+        public static float Cross(this Vector2 v1, Vector2 v2)
+        {
+            return Vector3.Cross(v1, v2).z;
+        }
+
+
+        public static Vector2 Cross(this float r, Vector2 v)
+        {
+            return new Vector2(-v.y * r, v.x * r);
+        }
+
+        public static Vector2 Cross(this Vector2 v, float r)
+        {
+            return new Vector2(r * v.y, -r * v.x);
+        }
+
+        public static Vector2 Rotate(this Vector2 v, float r)
+        {
+            var c = Mathf.Cos(r);
+            var s = Mathf.Sin(r);
+            return new Vector2(v.x * c - v.y * s, v.x * s + v.y * s);
+        }
+
+        public static bool Equals(this float f1, float f2)
+        {
+            return Mathf.Abs(f1 - f2) < 1e-4f;
+        }
+
+        public static bool Equals(this Vector2 v1, Vector2 v2)
+        {
+            return v1.x.Equals(v2.x) && v1.y.Equals(v2.y);
         }
     }
 }
