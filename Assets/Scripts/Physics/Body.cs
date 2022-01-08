@@ -49,7 +49,7 @@ namespace ReducedBox2D
                 _angle += delta;
                 foreach (var box in _boxs)
                 {
-                    box.Rot += _angle;
+                    box.Rot += delta;
                     var r = box.pos - _massCenter;
                     box.pos = _massCenter + r.Rotate(delta);
                 }
@@ -84,26 +84,25 @@ namespace ReducedBox2D
         {
             foreach (var box in boxs)
             {
-                AddBox(box);
+                box.SetBody(this);
             }
         }
 
         internal void AddBox(Box b)
         {
             _boxs.Add(b);
-            if (_invMass == 0 || b.mass == float.PositiveInfinity)
+            if (b.mass == float.PositiveInfinity)
             {
                 _invMass = 0;
                 _invI = 0;
-                _massCenter = Vector2.positiveInfinity;
             }
             else if (_boxs.Count == 1)
             {
-                _invMass = b.mass;
+                _invMass = 1f / b.Mass;
                 _invI = b.InvI;
                 _massCenter = b.pos;
             }
-            else
+            else if (_invMass != 0f)
             {
                 _massCenter = (_massCenter / _invMass + b.mass * b.pos);
                 _invMass = 1f / (1f / _invMass + b.mass);
@@ -128,7 +127,6 @@ namespace ReducedBox2D
                 {
                     _invI = 0f;
                     _invMass = 0f;
-                    Debug.Assert(_massCenter == Vector2.positiveInfinity);
                 }
                 else
                 {
@@ -182,7 +180,7 @@ namespace ReducedBox2D
     public class Box
     {
         internal Vector2 pos;
-        internal Vector2 Siz;
+        public Vector2 Siz;
         public float Rot; //in rand
         internal float mass;
 

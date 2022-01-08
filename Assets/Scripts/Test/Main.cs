@@ -10,13 +10,14 @@ public class Main : MonoBehaviour
     private World _world = null;
     public static Main Instance => _instance;
     private List<Rigid> _rigids = new List<Rigid>();
-    private Dictionary<Box, BoxCollider> _boxs = new Dictionary<Box, BoxCollider>();
+    private Dictionary<Box, Rect> _boxs = new Dictionary<Box, Rect>();
+    public Vector2 Gravity = new Vector2(0, -9.8f);
 
     private void Awake()
     {
         Debug.Assert(_instance == null);
         _instance = this;
-        _world = new World(new Vector2(0, -9.8f));
+        _world = new World(Gravity);
     }
 
     public void AddRigid(Rigid r)
@@ -25,7 +26,7 @@ public class Main : MonoBehaviour
         _world.AddBody(r.Body);
     }
 
-    public void AddBox(BoxCollider b)
+    public void AddBox(Rect b)
     {
         Debug.Assert(b.Box != null);
         _boxs[b.Box] = b;
@@ -33,6 +34,11 @@ public class Main : MonoBehaviour
 
     private void FixedUpdate()
     {
+        foreach (var r in _rigids)
+        {
+            r.SyncInfo();
+        }
+
         var arbiters = _world.Simulate(Time.fixedDeltaTime);
         foreach (var r in _rigids)
         {
@@ -43,8 +49,8 @@ public class Main : MonoBehaviour
         {
             var a = _boxs[ar.A];
             var b = _boxs[ar.B];
-            b.OnCollision(a,new List<Contact>(ar.Contacts));
-            a.OnCollision(b,new List<Contact>(ar.Contacts).ConvertAll(s =>
+            b.OnCollision(a, new List<Contact>(ar.Contacts));
+            a.OnCollision(b, new List<Contact>(ar.Contacts).ConvertAll(s =>
             {
                 s.Normal = -s.Normal;
                 return s;

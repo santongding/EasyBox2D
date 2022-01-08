@@ -74,9 +74,9 @@ namespace ReducedBox2D
             return new Vector2(Mathf.Abs(v.x), Mathf.Abs(v.y));
         }
 
-        public static float Cross(this Vector2 v1, Vector2 v2)
+        public static float Cross(this Vector2 a, Vector2 b)
         {
-            return Vector3.Cross(v1, v2).z;
+            return a.x * b.y - a.y * b.x;
         }
 
 
@@ -94,7 +94,7 @@ namespace ReducedBox2D
         {
             var c = Mathf.Cos(r);
             var s = Mathf.Sin(r);
-            return new Vector2(v.x * c - v.y * s, v.x * s + v.y * s);
+            return new Vector2(v.x * c - v.y * s, v.x * s + v.y * c);
         }
 
         public static bool Equals(this float f1, float f2)

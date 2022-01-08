@@ -20,7 +20,7 @@ namespace ReducedBox2D
                 }
             }
 
-            return null;
+            return ans;
         }
 
         static Arbiter getContacts(Box a, Box b)
@@ -87,7 +87,7 @@ namespace ReducedBox2D
             var cts = computeContactEdge(isA ? b : a, isA ? rotB : rotA, isA ? rotBT : rotAT, normal);
             Debug.Assert(cts.Length == 2);
             var p = isA ? a.pos : b.pos;
-            if (clipEdge(cts, sideNormal, sideH, p) == false || clipEdge(cts, sideNormal, sideH, p))
+            if (clipEdge(cts, sideNormal, sideH, p) == false || clipEdge(cts, -sideNormal, sideH, p) == false)
             {
                 return null;
             }
@@ -97,7 +97,7 @@ namespace ReducedBox2D
             for (int i = 0; i < cts.Length; i++)
             {
                 cts[i].Separation = frontH - Vector2.Dot((cts[i].Pos - p), normal);
-                if (cts[i].Separation <= 0)
+                if (cts[i].Separation <= -1e-4)
                 {
                     continue;
                 }
@@ -105,7 +105,6 @@ namespace ReducedBox2D
                 cts[i].Normal = normal;
                 contacts.Add(cts[i]);
             }
-
             Debug.Assert(contacts.Count > 0);
             return isA ? new Arbiter(a, b, contacts.ToArray()) : new Arbiter(b, a, contacts.ToArray());
         }
@@ -116,14 +115,14 @@ namespace ReducedBox2D
         static Contact[] computeContactEdge(Box b, Mat22 rot, Mat22 rotT, Vector2 normal)
         {
             var localNormal = rotT * (-normal);
-            var angle = Mathf.Atan2(normal.y, normal.x);
+            var angle = Mathf.Atan2(localNormal.y, localNormal.x);
             var i = Mathf.FloorToInt((angle + Mathf.PI / 4f) / (Mathf.PI / 2));
             i = ((i % 4) + 4) % 4;
             var j = (i + 3) % 4;
             return new[]
             {
-                new Contact {Pos = b.pos + new Vector2(fx[i].x * b.Siz.x, fx[i].y * b.Siz.y) / 2f},
-                new Contact {Pos = new Vector2(fx[j].x * b.Siz.x, fx[j].y * b.Siz.y) / 2f}
+                new Contact {Pos = b.pos + rot * new Vector2(fx[i].x * b.Siz.x, fx[i].y * b.Siz.y) / 2f},
+                new Contact {Pos = b.pos + rot * new Vector2(fx[j].x * b.Siz.x, fx[j].y * b.Siz.y) / 2f}
             };
         }
 
@@ -161,7 +160,8 @@ namespace ReducedBox2D
         public Vector2 Pos;
         public Vector2 Impulse;
         public float Separation;
-        public float MassNormal;
-        public float MassTangent;
+        internal float MassNormal;
+        internal float MassTangent;
+        internal float Bias;
     }
 }

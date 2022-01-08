@@ -11,6 +11,8 @@ namespace ReducedBox2D
         public Contact[] Contacts = null;
         private Box _a, _b;
 
+        private float _friction;
+
         public Box A => _a;
 
         public Box B => _b;
@@ -20,6 +22,7 @@ namespace ReducedBox2D
             _a = a;
             _b = b;
             Contacts = cts;
+            _friction = Mathf.Sqrt(_a.Friction * _b.Friction);
         }
 
 
@@ -29,7 +32,6 @@ namespace ReducedBox2D
             var _rb = _b.Body;
             for (int i = 0; i < Contacts.Length; i++)
             {
-        
                 var r1 = Contacts[i].Pos - _ra.Pos;
                 var r2 = Contacts[i].Pos - _rb.Pos;
                 var rn1 = Vector2.Dot(r1, Contacts[i].Normal);
@@ -46,6 +48,8 @@ namespace ReducedBox2D
                                _rb.InvI * (r2.sqrMagnitude - rt2 * rt2);
 
                 Contacts[i].MassTangent = 1 / kTangent;
+
+                Contacts[i].Bias = World.BiasFactor / deltaTime * Mathf.Max(0, Contacts[i].Separation - World.BiasSlot);
             }
         }
 
@@ -57,27 +61,33 @@ namespace ReducedBox2D
             {
                 var r1 = Contacts[i].Pos - ra.Pos;
                 var r2 = Contacts[i].Pos - rb.Pos;
-                var dv = ra.Velocity - rb.Velocity + ra.AngleVelocity.Cross(r1) - rb.AngleVelocity.Cross(r2);
-                var dpn = Mathf.Max(0, -dv.Cross( Contacts[i].Normal) * Contacts[i].MassNormal);
+                var dv = rb.Velocity - ra.Velocity + rb.AngleVelocity.Cross(r2) - ra.AngleVelocity.Cross(r1);
+
+                var dpn = Mathf.Max(0,
+                    (-Vector2.Dot(dv, Contacts[i].Normal) + Contacts[i].Bias) * Contacts[i].MassNormal);
                 var pn = dpn * Contacts[i].Normal;
                 ra.Velocity -= pn * ra.InvMass;
                 rb.Velocity += pn * rb.InvMass;
                 ra.AngleVelocity -= r1.Cross(pn) * ra.InvI;
-                rb.AngleVelocity += r1.Cross(pn) * rb.InvI;
-                
-                dv = ra.Velocity - rb.Velocity + ra.AngleVelocity.Cross(r1) - rb.AngleVelocity.Cross(r2);
-                var u = _a.Friction * _b.Friction;
-                var tangent = Contacts[i].Normal.Cross(1.0f);
-                var dpt = Mathf.Clamp(-dv.Cross(tangent)*Contacts[i].MassTangent, -u * dpn, u * dpn);
+                rb.AngleVelocity += r2.Cross(pn) * rb.InvI;
+
+                dv = rb.Velocity - ra.Velocity + rb.AngleVelocity.Cross(r2) - ra.AngleVelocity.Cross(r1);
+                var mp = dpn * _friction;
+                var tangent = -Contacts[i].Normal.Cross(1.0f);
+                var dpt = Mathf.Clamp(-Vector2.Dot(dv, tangent) * Contacts[i].MassTangent, -mp, mp);
                 var pt = dpt * tangent;
 
                 ra.Velocity -= pt * ra.InvMass;
                 rb.Velocity += pt * rb.InvMass;
                 ra.AngleVelocity -= r1.Cross(pt) * ra.InvI;
-                rb.AngleVelocity += r1.Cross(pt) * rb.InvI;
+                rb.AngleVelocity += r2.Cross(pt) * rb.InvI;
 
-                Contacts[i].Impulse = pn + pt;
+                Contacts[i].Impulse += pn + pt;
+                //Debug.Log(r1 + " " + r2);
             }
+
+            // Debug.Log(ra.InvI + " " + rb.InvI);
+            // Debug.Log(ra.InvMass + " " + rb.InvMass);
         }
     }
 }

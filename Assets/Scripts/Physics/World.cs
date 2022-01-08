@@ -8,6 +8,13 @@ namespace ReducedBox2D
     public class World
     {
         private Vector2 _gravity;
+        private int _iterationNum = 10;
+        private static float _biasFactor = 0.3f;
+        private static float _biasSlot = 0.01f;
+
+        public static float BiasFactor => _biasFactor;
+
+        public static float BiasSlot => _biasSlot;
 
         private List<Body> _bodies = new List<Body>();
 
@@ -15,7 +22,7 @@ namespace ReducedBox2D
         {
             _gravity = gravity;
         }
-        
+
         public void AddBody(Body body)
         {
             _bodies.Add(body);
@@ -26,7 +33,7 @@ namespace ReducedBox2D
             _bodies.Remove(body);
         }
 
-        public List<Arbiter>  Simulate(float deltaTime)
+        public List<Arbiter> Simulate(float deltaTime)
         {
             var arbiters = new List<Arbiter>();
             for (int i = 0; i < _bodies.Count - 1; i++)
@@ -39,23 +46,29 @@ namespace ReducedBox2D
 
             foreach (var body in _bodies)
             {
+                if (body.InvMass == 0f)
+                {
+                    continue;
+                }
+
                 body.Velocity += deltaTime * (_gravity + body.InvMass * body.Force);
-                body.AngleVelocity += deltaTime * (body.InvMass * body.Torgue);
+                body.AngleVelocity += deltaTime * (body.InvI * body.Torgue);
             }
-            
+
             foreach (var arbiter in arbiters)
             {
                 arbiter.PreStep(deltaTime);
             }
-            
-            foreach (var arbiter in arbiters)
-            {
-                arbiter.ApplyImpulse(deltaTime);
-            }
-            
+
+            for (int i = 0; i < _iterationNum; i++)
+                foreach (var arbiter in arbiters)
+                {
+                    arbiter.ApplyImpulse(deltaTime);
+                }
+
             UpdatePos(deltaTime);
-            
-            
+            //Debug.Log(arbiters.Count);
+
             return arbiters;
         }
 
