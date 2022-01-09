@@ -61,10 +61,12 @@ namespace ReducedBox2D
             }
 
             for (int i = 0; i < _iterationNum; i++)
+            {
                 foreach (var arbiter in arbiters)
                 {
-                    arbiter.ApplyImpulse(deltaTime);
+                    arbiter.ApplyImpulse(deltaTime, ((_iterationNum) & 1) != 0);
                 }
+            }
 
             UpdatePos(deltaTime);
             //Debug.Log(arbiters.Count);

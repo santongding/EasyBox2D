@@ -49,24 +49,27 @@ namespace ReducedBox2D
             bool isA = true;
 
             float relativeTol = 0.95f;
-            float absoluteTol = 0.01f;
+            float absoluteTol = -0.01f;
             float separation = faceA.x;
+            float value = relativeTol * separation + absoluteTol * hA.y;
             float sideH = hA.y;
             float frontH = hA.x;
             Vector2 sideNormal = rotA.col2;
             Vector2 normal = dA.x > 0 ? rotA.col1 : -rotA.col1;
-            if (faceA.y > separation * relativeTol + absoluteTol * hA.y)
+            if (relativeTol * faceA.y + absoluteTol * hA.x > value)
             {
                 separation = faceA.y;
+                value = relativeTol * faceA.y + absoluteTol * hA.x;
                 normal = dA.y > 0 ? rotA.col2 : -rotA.col2;
                 sideNormal = rotA.col1;
                 sideH = hA.x;
                 frontH = hA.y;
             }
 
-            if (faceB.y > separation * relativeTol + absoluteTol * hB.y)
+            if (relativeTol * faceB.y + absoluteTol * hB.x > value)
             {
                 separation = faceB.y;
+                value = relativeTol * faceB.y + absoluteTol * hB.x;
                 normal = dB.y > 0 ? rotB.col2 : -rotB.col2;
                 sideNormal = rotB.col1;
                 isA = false;
@@ -74,9 +77,10 @@ namespace ReducedBox2D
                 frontH = hB.y;
             }
 
-            if (faceB.x > separation * relativeTol + absoluteTol * hB.x)
+            if (relativeTol * faceB.x + absoluteTol * hB.y > value)
             {
                 separation = faceB.x;
+                value = relativeTol * faceB.x + absoluteTol * hB.y;
                 normal = dB.x > 0 ? rotB.col1 : -rotB.col1;
                 sideNormal = rotB.col2;
                 isA = false;
@@ -105,6 +109,7 @@ namespace ReducedBox2D
                 cts[i].Normal = normal;
                 contacts.Add(cts[i]);
             }
+
             Debug.Assert(contacts.Count > 0);
             return isA ? new Arbiter(a, b, contacts.ToArray()) : new Arbiter(b, a, contacts.ToArray());
         }

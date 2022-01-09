@@ -53,12 +53,14 @@ namespace ReducedBox2D
             }
         }
 
-        public void ApplyImpulse(float deltaTime)
+        public void ApplyImpulse(float deltaTime, bool rev)
         {
             var ra = _a.Body;
             var rb = _b.Body;
-            for (int i = 0; i < Contacts.Length; i++)
+
+            for (int o = 0; o < Contacts.Length; o++)
             {
+                var i = rev ? Contacts.Length - o - 1 : o;
                 var r1 = Contacts[i].Pos - ra.Pos;
                 var r2 = Contacts[i].Pos - rb.Pos;
                 var dv = rb.Velocity - ra.Velocity + rb.AngleVelocity.Cross(r2) - ra.AngleVelocity.Cross(r1);
